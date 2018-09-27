@@ -1,6 +1,6 @@
 <?php
 
-namespace Laradium\Laradium\Content\Providers;
+namespace Laradium\Laradium\Permission\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
