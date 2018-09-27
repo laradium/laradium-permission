@@ -1,0 +1,23 @@
+{
+  "name": "laradium/laradium-permission",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Dmitrijs Mihailovs",
+      "email": "dmitrijs.mihailovs@netcore.lv"
+    }
+  ],
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "Laradium\\Laradium\\Permission\\": "src"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Laradium\\Laradium\\Permission\\Providers\\LaradiumPermissionServiceProvider"
+      ]
+    }
+  }
+}
