@@ -1,6 +1,6 @@
 <?php
 
-namespace Laradium\Laradium\Traits;
+namespace Laradium\Laradium\Permission\Traits;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
