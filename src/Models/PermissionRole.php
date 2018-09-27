@@ -38,4 +38,24 @@ class PermissionRole extends Model
     {
         return $this->hasMany(PermissionRoleRoute::class);
     }
+
+    /**
+     * @return array
+     */
+    public function getRoutes()
+    {
+        $routes = [];
+
+        foreach ($this->groups as $group) {
+            foreach ($group->routes as $route) {
+                $routes[] = $route->route;
+            }
+        }
+
+        foreach ($this->routes as $route) {
+            $routes[] = $route->route;
+        }
+
+        return array_unique($routes);
+    }
 }

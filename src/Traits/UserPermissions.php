@@ -4,6 +4,7 @@ namespace Laradium\Laradium\Permission\Traits;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
+use Laradium\Laradium\Base\AbstractResource;
 use Laradium\Laradium\Permission\Models\PermissionRole;
 
 trait UserPermissions
@@ -18,13 +19,18 @@ trait UserPermissions
     }
 
     /**
-     * @param Request $request
+     * @param null $resource
      * @return bool
      */
-    public function hasPermission(Request $request): bool
+    public function hasPermissionTo($resource = null, $action = 'index'): bool
     {
-        $currentRoute = $request->route()->getName();
-        if ($currentRoute === 'laradium::permissions.access-denied') {
+        if ($resource) {
+            $currentRoute = $resource instanceof AbstractResource ? $resource->getRoute($action) : (new $resource)->getRoute($action);
+        } else {
+            $currentRoute = request()->route()->getName();
+        }
+
+        if ($currentRoute === 'admin.access-denied') {
             return true;
         }
 
@@ -33,22 +39,14 @@ trait UserPermissions
             return false;
         }
 
-        foreach ($role->routes as $route) {
-            if ($this->checkRoute($currentRoute, $route)) {
-                return true;
-            }
-        }
-
         $groups = $role->groups;
         if (!$groups->count()) {
             return false;
         }
 
         foreach ($groups as $group) {
-            foreach ($group->routes as $route) {
-                if ($this->checkRoute($currentRoute, $route)) {
-                    return true;
-                }
+            if ($this->checkRoute($currentRoute, $group->routes->pluck('route'))) {
+                return true;
             }
         }
 
@@ -57,14 +55,64 @@ trait UserPermissions
 
     /**
      * @param $currentRoute
-     * @param $route
+     * @param $routes
      * @return bool
      */
-    protected function checkRoute($currentRoute, $route): bool
+    protected function checkRoute($currentRoute, $routes): bool
     {
-        $selectedRoute = str_replace('*', '', $route->route);
-        $matches = preg_match('/' . $selectedRoute . '/', $currentRoute);
+        foreach ($routes as $route) {
+            if ($route === '*') {
+                return true;
+            }
 
-        return $route->route === '*' || $matches;
+            $selectedRoute = str_replace('*', '', $route);
+            $matches = preg_match('/' . $selectedRoute . '/', $currentRoute);
+
+            if ($matches) {
+                return true;
+            }
+
+            $currentExploded = explode('.', $currentRoute);
+            $neededExploded = explode('.', $route);
+
+            if (isset($currentExploded[1]) && isset($neededExploded[1])) {
+                $segment = $currentExploded[1] === $neededExploded[1];
+
+                if ($segment && (isset($currentExploded[2]) && isset($neededExploded[2]))) {
+                    foreach ($this->getActions($neededExploded[2]) as $r) {
+                        if ($currentExploded[2] === $r) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getActions($segment)
+    {
+        $array = [
+            'index'  => [
+                'data-table'
+            ],
+            'create' => [
+                'create',
+                'store',
+                'form',
+            ],
+            'edit'   => [
+                'edit',
+                'update',
+                'editable',
+                'form',
+            ]
+        ];
+
+        return $array[$segment] ?? [];
     }
 }
