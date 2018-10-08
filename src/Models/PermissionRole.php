@@ -32,14 +32,6 @@ class PermissionRole extends Model
     }
 
     /**
-     * @return HasMany
-     */
-    public function routes(): HasMany
-    {
-        return $this->hasMany(PermissionRoleRoute::class);
-    }
-
-    /**
      * @return array
      */
     public function getRoutes()
@@ -50,10 +42,6 @@ class PermissionRole extends Model
             foreach ($group->routes as $route) {
                 $routes[] = $route->route;
             }
-        }
-
-        foreach ($this->routes as $route) {
-            $routes[] = $route->route;
         }
 
         return array_unique($routes);

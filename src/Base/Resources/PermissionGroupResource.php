@@ -3,9 +3,9 @@
 namespace Laradium\Laradium\Permission\Base\Resources;
 
 use Laradium\Laradium\Base\AbstractResource;
+use Laradium\Laradium\Base\ColumnSet;
 use Laradium\Laradium\Base\FieldSet;
 use Laradium\Laradium\Base\Resource;
-use Laradium\Laradium\Base\ColumnSet;
 use Laradium\Laradium\Base\Table;
 use Laradium\Laradium\Permission\Models\PermissionGroup;
 
@@ -22,7 +22,7 @@ class PermissionGroupResource extends AbstractResource
      */
     public function resource()
     {
-        return (new Resource)->make(function (FieldSet $set) {
+        return laradium()->resource(function (FieldSet $set) {
             $set->text('name')->rules('required|min:3|max:255');
 
             $set->hasMany('routes')->fields(function (FieldSet $set) {
@@ -36,7 +36,7 @@ class PermissionGroupResource extends AbstractResource
      */
     public function table()
     {
-        return (new Table)->make(function (ColumnSet $column) {
+        $table = laradium()->table(function (ColumnSet $column) {
             $column->add('id', '#ID');
             $column->add('name');
             $column->add('routes')->modify(function ($r) {
@@ -51,5 +51,7 @@ class PermissionGroupResource extends AbstractResource
                 return $html;
             });
         });
+
+        return $table;
     }
 }

@@ -14,14 +14,15 @@ class SeedPermissionRolesGroups extends Migration
     public function up()
     {
         $group = PermissionGroup::create([
-            'name' => 'Super powers'
+            'name' => 'Super powers',
         ]);
         $group->routes()->create([
             'route' => '*'
         ]);
 
         $role = PermissionRole::create([
-            'name' => 'Global admin'
+            'name'          => 'Global admin',
+            'is_superadmin' => 1
         ]);
         $role->groups()->attach($role->id);
     }

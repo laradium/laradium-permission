@@ -3,7 +3,6 @@
 namespace Laradium\Laradium\Permission\Traits;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Http\Request;
 use Laradium\Laradium\Base\AbstractResource;
 use Laradium\Laradium\Permission\Models\PermissionRole;
 
@@ -30,7 +29,7 @@ trait UserPermissions
             $currentRoute = request()->route()->getName();
         }
 
-        if ($currentRoute === 'admin.access-denied') {
+        if (in_array($currentRoute, $this->allowedRoutes())) {
             return true;
         }
 
@@ -114,5 +113,17 @@ trait UserPermissions
         ];
 
         return $array[$segment] ?? [];
+    }
+
+    /**
+     * @return array
+     */
+    protected function allowedRoutes()
+    {
+        return [
+            'admin.access-denied',
+            'admin.dashboard',
+            'admin.logout'
+        ];
     }
 }
