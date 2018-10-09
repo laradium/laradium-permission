@@ -12,19 +12,20 @@ trait UserPermissions
     /**
      * @return BelongsTo
      */
-    public function role()
+    public function role(): BelongsTo
     {
         return $this->belongsTo(PermissionRole::class);
     }
 
     /**
      * @param null $resource
+     * @param string $action
      * @return bool
      */
     public function hasPermissionTo($resource = null, $action = 'index'): bool
     {
         if ($resource) {
-            $currentRoute = $resource instanceof AbstractResource ? $resource->getRoute($action) : (new $resource)->getRoute($action);
+            $currentRoute = $resource instanceof AbstractResource ? $resource->getRoute($action) : (class_exists($resource) ? (new $resource)->getRoute($action) : request()->route()->getName());
         } else {
             $currentRoute = request()->route()->getName();
         }
@@ -74,10 +75,10 @@ trait UserPermissions
             $currentExploded = explode('.', $currentRoute);
             $neededExploded = explode('.', $route);
 
-            if (isset($currentExploded[1]) && isset($neededExploded[1])) {
+            if (isset($currentExploded[1], $neededExploded[1])) {
                 $segment = $currentExploded[1] === $neededExploded[1];
 
-                if ($segment && (isset($currentExploded[2]) && isset($neededExploded[2]))) {
+                if (isset($currentExploded[2], $neededExploded[2]) && $segment) {
                     foreach ($this->getActions($neededExploded[2]) as $r) {
                         if ($currentExploded[2] === $r) {
                             return true;
@@ -91,9 +92,10 @@ trait UserPermissions
     }
 
     /**
+     * @param $segment
      * @return array
      */
-    protected function getActions($segment)
+    protected function getActions($segment): array
     {
         $array = [
             'index'  => [
@@ -118,7 +120,7 @@ trait UserPermissions
     /**
      * @return array
      */
-    protected function allowedRoutes()
+    protected function allowedRoutes(): array
     {
         return [
             'admin.access-denied',
