@@ -39,6 +39,10 @@ trait UserPermissions
             return false;
         }
 
+        if ($role->is_superadmin) {
+            return true;
+        }
+
         $groups = $role->groups;
         if (!$groups->count()) {
             return false;
@@ -60,11 +64,14 @@ trait UserPermissions
      */
     protected function checkRoute($currentRoute, $routes): bool
     {
+        // Search for a wildcard route first
         foreach ($routes as $route) {
             if ($route === '*') {
                 return true;
             }
+        }
 
+        foreach ($routes as $route) {
             $selectedRoute = str_replace('*', '', $route);
             $matches = preg_match('/' . $selectedRoute . '/', $currentRoute);
 
