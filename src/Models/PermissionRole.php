@@ -4,7 +4,6 @@ namespace Laradium\Laradium\Permission\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PermissionRole extends Model
 {
@@ -34,7 +33,15 @@ class PermissionRole extends Model
     /**
      * @return array
      */
-    public function getRoutes()
+    public static function getOptions(): array
+    {
+        return auth()->user()->role->is_superadmin ? self::pluck('name', 'id')->toArray() : self::where('is_superadmin', 0)->pluck('name', 'id')->toArray();
+    }
+
+    /**
+     * @return array
+     */
+    public function getRoutes(): array
     {
         $routes = [];
 
