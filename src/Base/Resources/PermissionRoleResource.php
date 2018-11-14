@@ -37,7 +37,7 @@ class PermissionRoleResource extends AbstractResource
     public function table()
     {
         $resource = $this;
-        $slug = $this->getSlug();
+        $slug = $this->getBaseResource()->getSlug();
 
         $table = laradium()->table(function (ColumnSet $column) use ($resource, $slug) {
             $column->add('id', '#ID');
@@ -77,13 +77,15 @@ class PermissionRoleResource extends AbstractResource
             abort(404);
         }
 
-        $resource = $this->resource();
-        $form = new Form($resource->setModel($model)->build());
-        $form->abstractResource($this);
-        $form->buildForm();
+        $form = (new Form(
+            $this
+                ->getBaseResource($this->getModel())
+                ->make($this->resource()->closure())
+                ->build())
+        )->build();
 
-        $name = $this->getName();
-        $slug = $this->getSlug();
+        $name = $this->getBaseResource()->getName();
+        $slug = $this->getBaseResource()->getSlug();
 
         return view('laradium::admin.resource.edit', compact('form', 'name', 'slug'));
     }
@@ -102,29 +104,24 @@ class PermissionRoleResource extends AbstractResource
             abort(404);
         }
 
-        $resource = $this->resource();
-        $form = new Form($resource->setModel($model)->build());
-        $form->buildForm();
+        $this->model($model);
 
-        if (isset($this->events['beforeSave'])) {
-            $this->events['beforeSave']($this->model, $request);
-        }
+        $form = $this->getForm();
+        $validationRequest = $this->prepareRequest($request);
+
+        $this->fireEvent('beforeSave', $request);
 
         $validationRules = $form->getValidationRules();
-        $request->validate($validationRules);
+        $validationRequest->validate($validationRules);
 
-        $model = $this->model->find($id);
+        $this->saveData($request->all(), $this->getModel());
 
-        $this->updateResource($request->except('_token'), $model);
-
-        if (isset($this->events['afterSave'])) {
-            $this->events['afterSave']($this->model, $request);
-        }
+        $this->fireEvent('afterSave', $request);
 
         if ($request->ajax()) {
             return [
-                'success' => 'Resource successfully updated',
-                'data'    => $this->getForm($model->id)
+                'success'  => 'Resource successfully updated!',
+                'redirect' => $form->getAction('edit')
             ];
         }
 

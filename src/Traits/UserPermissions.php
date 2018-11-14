@@ -25,7 +25,7 @@ trait UserPermissions
     public function hasPermissionTo($resource = null, $action = 'index'): bool
     {
         if ($resource) {
-            $currentRoute = $resource instanceof AbstractResource ? $resource->getRoute($action) : (class_exists($resource) ? (new $resource)->getRoute($action) : request()->route()->getName());
+            $currentRoute = $resource instanceof AbstractResource ? $resource->getBaseResource()->getRoute($action) : (class_exists($resource) ? (new $resource)->getBaseResource()->getRoute($action) : request()->route()->getName());
         } else {
             $currentRoute = request()->route()->getName();
         }
