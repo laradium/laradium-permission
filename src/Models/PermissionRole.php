@@ -11,7 +11,8 @@ class PermissionRole extends Model
      * @var array
      */
     protected $fillable = [
-        'name'
+        'name',
+        'is_superadmin'
     ];
 
     /**

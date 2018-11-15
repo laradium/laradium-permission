@@ -79,15 +79,12 @@ class PermissionRoleResource extends AbstractResource
 
         $form = (new Form(
             $this
-                ->getBaseResource($this->getModel())
+                ->getBaseResource($model)
                 ->make($this->resource()->closure())
                 ->build())
         )->build();
 
-        $name = $this->getBaseResource()->getName();
-        $slug = $this->getBaseResource()->getSlug();
-
-        return view('laradium::admin.resource.edit', compact('form', 'name', 'slug'));
+        return view('laradium::admin.resource.edit', compact('form'));
     }
 
     /**
@@ -106,13 +103,17 @@ class PermissionRoleResource extends AbstractResource
 
         $this->model($model);
 
-        $form = $this->getForm();
-        $validationRequest = $this->prepareRequest($request);
+        $form = (new Form(
+            $this
+                ->getBaseResource($model)
+                ->make($this->resource()->closure())
+                ->build())
+        )->build();
 
         $this->fireEvent('beforeSave', $request);
 
         $validationRules = $form->getValidationRules();
-        $validationRequest->validate($validationRules);
+        $request->validate($validationRules);
 
         $this->saveData($request->all(), $this->getModel());
 
