@@ -25,7 +25,8 @@ class PermissionRoleResource extends AbstractResource
     public function resource()
     {
         return laradium()->resource(function (FieldSet $set) {
-            $set->text('name')->rules('required|min:3|max:255');
+            $uniqueRule = request()->route()->permission_role ? 'unique:permission_roles,name,' . request()->route()->permission_role : 'unique:permission_roles';
+            $set->text('name')->rules('required|min:3|max:255|' . $uniqueRule);
 
             $set->belongsToMany('groups', 'Groups');
         });
@@ -40,7 +41,6 @@ class PermissionRoleResource extends AbstractResource
         $slug = $this->getBaseResource()->getSlug();
 
         $table = laradium()->table(function (ColumnSet $column) use ($resource, $slug) {
-            $column->add('id', '#ID');
             $column->add('name');
             $column->add('groups')->modify(function ($r) {
                 $html = '<ul>';
@@ -52,14 +52,14 @@ class PermissionRoleResource extends AbstractResource
                 $html .= '</ul>';
 
                 return $html;
-            });
+            })->notSortable()->notSearchable();
             $column->add('action')->modify(function ($item) use ($resource, $slug) {
                 if ($item->is_superadmin) {
                     return '';
                 }
 
                 return view('laradium::admin.resource._partials.action', compact('item', 'resource', 'slug'))->render();
-            });
+            })->notSortable()->notSearchable();
         });
 
         return $table;
@@ -71,7 +71,13 @@ class PermissionRoleResource extends AbstractResource
      */
     public function edit($id)
     {
-        $model = $this->model->findOrFail($id);
+        $model = $this->model;
+        if ($where = $this->resource()->getWhere()) {
+            $model = $model->where($where);
+        }
+        $model = $model->findOrFail($id);
+
+        $this->model($model);
 
         if ($model->is_superadmin) {
             abort(404);
@@ -83,8 +89,9 @@ class PermissionRoleResource extends AbstractResource
                 ->make($this->resource()->closure())
                 ->build())
         )->build();
+        $resource = $this;
 
-        return view('laradium::admin.resource.edit', compact('form'));
+        return view('laradium::admin.resource.edit', compact('form', 'resource'));
     }
 
     /**
